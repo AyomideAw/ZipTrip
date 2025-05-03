@@ -1,10 +1,10 @@
 import { auth } from '../firebase';
 import { GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAuth } from '../context/AuthContext';
 
 const AuthButton = () => {
-  const [user] = useAuthState(auth);
-
+  const { user } = useAuth();
+  
   const handleLogin = () => {
     const provider = new GoogleAuthProvider();
     signInWithPopup(auth, provider).catch(err => {
