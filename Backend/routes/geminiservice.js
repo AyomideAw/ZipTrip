@@ -32,6 +32,7 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const db = require('../firebaseAdmin'); 
 require('dotenv').config();
 
 const API_KEY = process.env.GEMINI_API_KEY;
