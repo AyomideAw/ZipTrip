@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CreateTrip from './pages/CreateTrip';
 import Dashboard from './pages/Dashboard';
+import TripDetails from './pages/TripDetails'; // ✅ Make sure this is here
 import AuthButton from './components/AuthButton';
 import Navbar from './components/Navbar'; // <-- ADD THIS LINE
 
@@ -13,6 +14,7 @@ const App = () => (
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/create" element={<CreateTrip />} />
+        <Route path="/trip/:tripId" element={<TripDetails />} /> {/* ✅ This is important */}
       </Routes>
     </div>
   </Router>

@@ -1,14 +1,16 @@
 const express = require('express');
 const cors = require('cors');
-require('dotenv').config(); // ✅ Needed to use GEMINI_API_KEY from .env
+require('dotenv').config();
 
-const geminiRoute = require('./routes/geminiservice'); // ✅ Organized routing
+const geminiRoute = require('./routes/geminiservice');
 
 const app = express();
-app.use(cors());
+
+// ✅ Allow frontend (adjust origin if deployed)
+app.use(cors({ origin: 'http://localhost:8989' }));
+
 app.use(express.json());
+app.use('/api/gemini', geminiRoute);
 
-app.use('/api/gemini', geminiRoute); // e.g. POST to http://localhost:5000/api/gemini
-
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8989;
 app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));

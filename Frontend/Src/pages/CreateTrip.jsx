@@ -1,80 +1,121 @@
-// import { useState } from 'react'
-// import { addTrip } from '../api/firestore'
+// import React, { useState } from 'react';
+// import { useAuthState } from 'react-firebase-hooks/auth';
+// import { auth } from '../firebase';
+// import { addTrip } from '../api/firestore';
 
-// export default function CreateTrip() {
-//   const [destination, setDestination] = useState('')
-//   const [purpose, setPurpose] = useState('Leisure')
-//   const [startDate, setStartDate] = useState('')
-//   const [endDate, setEndDate] = useState('')
-//   const [message, setMessage] = useState('')
+// const CreateTrip = () => {
+//   const [user] = useAuthState(auth);
+//   const [form, setForm] = useState({
+//     destination: '',
+//     startDate: '',
+//     endDate: '',
+//     purpose: 'Leisure',
+//   });
+//   const [message, setMessage] = useState('');
+//   const [checklist, setChecklist] = useState('');
+
+//   const handleChange = (e) => {
+//     setForm({ ...form, [e.target.name]: e.target.value });
+//   };
 
 //   const handleSubmit = async (e) => {
-//     e.preventDefault()
+//     e.preventDefault();
+
+//     const { destination, startDate, endDate, purpose } = form;
+
+//     if (!user) {
+//       setMessage('❌ Please log in to create a trip.');
+//       return;
+//     }
+
 //     if (!destination || !startDate || !endDate) {
-//       setMessage('Please fill all fields.')
-//       return
+//       setMessage('❌ Please fill in all required fields.');
+//       return;
 //     }
 
 //     try {
-//       const dateRange = `${startDate} to ${endDate}`
-//       const id = await addTrip({ destination, purpose, dateRange })
-//       setMessage(`✅ Trip saved with ID: ${id}`)
+//       const dateRange = `${startDate} to ${endDate}`;
+//       const id = await addTrip({ destination, purpose, dateRange });
+//       setMessage(`✅ Trip saved with ID: ${id}`);
 //     } catch (err) {
-//       console.error(err)
-//       setMessage('❌ Failed to save trip.')
+//       console.error(err);
+//       setMessage('❌ Failed to save trip.');
 //     }
-//   }
+//   };
+
+//   const handleGeminiTest = async () => {
+//     try {
+//       const { destination, startDate, endDate, purpose } = form;
+//       const dateRange = `${startDate} to ${endDate}`;
+
+//       const response = await fetch('http://localhost:8989/api/gemini', {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({
+//           destination,
+//           dateRange,
+//           purpose,
+//           weather: 'Mild', // You can later make this dynamic
+//         }),
+//       });
+
+//       const data = await response.json();
+//       if (data.checklist) {
+//         setChecklist(data.checklist);
+//         setMessage('✅ Checklist generated!');
+//       } else {
+//         setMessage('❌ No checklist returned.');
+//       }
+//     } catch (err) {
+//       console.error('Gemini error:', err);
+//       setMessage('❌ Failed to fetch checklist from Gemini.');
+//     }
+//   };
+
+//   if (!user) return <p className="text-center mt-10">Please log in to create a trip.</p>;
 
 //   return (
 //     <div className="max-w-md mx-auto mt-10 p-4 border rounded space-y-4 shadow">
 //       <h2 className="text-2xl font-bold">Create a New Trip</h2>
 
 //       <form onSubmit={handleSubmit} className="space-y-4">
-//         <div>
-//           <label className="block font-medium">Destination</label>
+//         <input
+//           type="text"
+//           name="destination"
+//           placeholder="Destination"
+//           value={form.destination}
+//           onChange={handleChange}
+//           className="w-full p-2 border rounded"
+//         />
+
+//         <div className="flex gap-2">
 //           <input
-//             type="text"
-//             value={destination}
-//             onChange={(e) => setDestination(e.target.value)}
+//             type="date"
+//             name="startDate"
+//             value={form.startDate}
+//             onChange={handleChange}
 //             className="w-full p-2 border rounded"
-//             placeholder="e.g. Paris"
+//           />
+//           <input
+//             type="date"
+//             name="endDate"
+//             value={form.endDate}
+//             onChange={handleChange}
+//             className="w-full p-2 border rounded"
 //           />
 //         </div>
 
-//         <div>
-//           <label className="block font-medium">Purpose</label>
-//           <select
-//             value={purpose}
-//             onChange={(e) => setPurpose(e.target.value)}
-//             className="w-full p-2 border rounded"
-//           >
-//             <option>Leisure</option>
-//             <option>Business</option>
-//             <option>Adventure</option>
-//             <option>Family</option>
-//           </select>
-//         </div>
-
-//         <div className="flex gap-2">
-//           <div className="flex-1">
-//             <label className="block font-medium">Start Date</label>
-//             <input
-//               type="date"
-//               value={startDate}
-//               onChange={(e) => setStartDate(e.target.value)}
-//               className="w-full p-2 border rounded"
-//             />
-//           </div>
-//           <div className="flex-1">
-//             <label className="block font-medium">End Date</label>
-//             <input
-//               type="date"
-//               value={endDate}
-//               onChange={(e) => setEndDate(e.target.value)}
-//               className="w-full p-2 border rounded"
-//             />
-//           </div>
-//         </div>
+//         <select
+//           name="purpose"
+//           value={form.purpose}
+//           onChange={handleChange}
+//           className="w-full p-2 border rounded"
+//         >
+//           <option value="Leisure">Leisure</option>
+//           <option value="Business">Business</option>
+//           <option value="Adventure">Adventure</option>
+//           <option value="Family">Family</option>
+//         </select>
 
 //         <button
 //           type="submit"
@@ -84,10 +125,27 @@
 //         </button>
 //       </form>
 
-//       {message && <p className="text-sm mt-2">{message}</p>}
+//       <button
+//         type="button"
+//         onClick={handleGeminiTest}
+//         className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
+//       >
+//         Generate Gemini Checklist
+//       </button>
+
+//       {message && <p className="text-sm mt-2 text-center">{message}</p>}
+
+//       {checklist && (
+//         <div className="mt-4 p-4 bg-gray-100 border rounded">
+//           <h3 className="font-semibold mb-2">Suggested Checklist:</h3>
+//           <pre className="whitespace-pre-wrap text-sm">{checklist}</pre>
+//         </div>
+//       )}
 //     </div>
-//   )
-// }
+//   );
+// };
+
+// export default CreateTrip;
 
 
 
@@ -214,6 +272,8 @@ export default function CreateTrip() {
   });
   const [message, setMessage] = useState('');
   const inputRef = useRef(null);
+  const [checklist, setChecklist] = useState([]);
+  const [tripId, setTripId] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -253,13 +313,40 @@ export default function CreateTrip() {
     }
   };
 
-  if (loading) {
-    return <p>Loading...</p>;
-  }
+  const handleGeminiChecklist = async () => {
+    const { destination, startDate, endDate, purpose } = form;
+    const dateRange = `${startDate} to ${endDate}`;
 
-  if (!user) {
-    return <p>Please log in to create a trip.</p>;
-  }
+    try {
+      const response = await fetch('http://localhost:8989/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination, dateRange, purpose, weather: 'Mild' }),
+      });
+
+      const data = await response.json();
+
+      if (data.checklist) {
+        const lines = data.checklist.split('\n').filter(line => line.trim() !== '');
+        const parsed = lines.map(item => ({
+          label: item.replace(/^[-*•\d.]+/, '').trim(),
+          checked: false,
+        }));
+        setChecklist(parsed);
+        setMessage('✅ Checklist generated!');
+
+        // Update Firestore if trip already saved
+        if (tripId) await updateChecklist(tripId, parsed);
+      } else {
+        setMessage('❌ No checklist returned.');
+      }
+    } catch (err) {
+      console.error('Gemini error:', err);
+      setMessage('❌ Failed to fetch checklist.');
+    }
+  };
+
+  if (!user) return <p className="text-center mt-10">Please log in to create a trip.</p>;
 
   return (
     <div className="max-w-md mx-auto mt-10 p-4 border rounded space-y-4 shadow">
@@ -274,7 +361,6 @@ export default function CreateTrip() {
           onChange={handleChange}
           className="w-full p-2 border rounded"
         />
-
         <div className="flex gap-2">
           <input
             type="date"
@@ -291,7 +377,6 @@ export default function CreateTrip() {
             className="w-full p-2 border rounded"
           />
         </div>
-
         <select
           name="purpose"
           value={form.purpose}
@@ -303,12 +388,47 @@ export default function CreateTrip() {
           <option value="Adventure">Adventure</option>
           <option value="Family">Family</option>
         </select>
-
-        <button type="submit" className="mt-3 bg-blue-500 text-white p-2 rounded">
+        <button
+          type="submit"
+          className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+        >
           Save Trip
         </button>
       </form>
-      {message && <p className="text-sm">{message}</p>}
+
+      <button
+        type="button"
+        onClick={handleGeminiChecklist}
+        className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
+      >
+        Generate Checklist
+      </button>
+
+      {message && <p className="text-sm mt-2 text-center">{message}</p>}
+
+      {checklist.length > 0 && (
+        <div className="mt-4 p-4 bg-gray-100 border rounded">
+          <h3 className="font-semibold mb-2">Checklist</h3>
+          <ul className="list-disc list-inside">
+            {checklist.map((item, i) => (
+              <li key={i}>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={item.checked}
+                    onChange={() => {
+                      const updated = [...checklist];
+                      updated[i].checked = !updated[i].checked;
+                      setChecklist(updated);
+                    }}
+                  />
+                  {item.label}
+                </label>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
