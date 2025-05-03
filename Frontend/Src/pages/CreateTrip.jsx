@@ -128,8 +128,7 @@ const CreateTrip = () => {
       const id = await addTrip({
         destination,
         purpose,
-        dateRange,
-        userId: user.uid,
+        dateRange
       });
       setMessage(`✅ Trip saved with ID: ${id}`);
     } catch (err) {

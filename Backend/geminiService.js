@@ -3,6 +3,8 @@ const axios = require('axios');
 const router = express.Router();
 
 const API_KEY = process.env.GEMINI_API_KEY;
+console.log("Gemini API Key:", API_KEY);
+
 
 router.post('/', async (req, res) => {
   const { destination, dateRange, purpose, weather } = req.body;

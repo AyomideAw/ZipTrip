@@ -1,10 +1,28 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '../firebase';
+import { getUserTrips } from '../api/firestore';
 
 const Dashboard = () => {
+  const [user] = useAuthState(auth);
+  const [trips, setTrips] = useState([]);
+
+  useEffect(() => {
+    const fetch = async () => user && setTrips(await getUserTrips());
+    fetch();
+  }, [user]);
+
+  if (!user) return <p>Please log in to view your trips.</p>;
+
   return (
-    <div className="p-6 text-center">
-      <h2 className="text-xl font-bold">Welcome to your Dashboard</h2>
-      <p className="mt-2">Trips you create will show up here!</p>
+    <div className="max-w-xl mx-auto mt-6">
+      <h2 className="text-xl font-bold mb-2">Your Trips</h2>
+      {trips.map(trip => (
+        <div key={trip.id} className="border p-3 rounded mb-3">
+          <strong>{trip.destination}</strong> • {trip.purpose}<br />
+          <span>{trip.dateRange}</span>
+        </div>
+      ))}
     </div>
   );
 };

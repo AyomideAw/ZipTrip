@@ -5,21 +5,34 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 const AuthButton = () => {
   const [user] = useAuthState(auth);
 
+  const handleLogin = () => {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider).catch(err => {
+      console.error("Login error:", err);
+    });
+  };
+
+  const handleLogout = () => {
+    signOut(auth).catch(err => {
+      console.error("Logout error:", err);
+    });
+  };
+
   return (
     <div className="mb-4">
-      {!user ? (
+      {user ? (
         <button
-          onClick={() => signInWithPopup(auth, new GoogleAuthProvider())}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
-        >
-          Log In
-        </button>
-      ) : (
-        <button
-          onClick={() => signOut(auth)}
+          onClick={handleLogout}
           className="bg-red-500 text-white px-4 py-2 rounded"
         >
           Log Out
+        </button>
+      ) : (
+        <button
+          onClick={handleLogin}
+          className="bg-blue-600 text-white px-4 py-2 rounded"
+        >
+          Log In
         </button>
       )}
     </div>
