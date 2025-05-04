@@ -1,4 +1,3 @@
-// src/context/AuthContext.jsx
 import { createContext, useContext } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';

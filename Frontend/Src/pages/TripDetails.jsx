@@ -4,6 +4,7 @@ import { getTripById, updateChecklist } from '../api/firestore';
 
 const TripDetails = () => {
   const { tripId } = useParams();
+  console.log("Trip ID from URL:", tripId);
   const [trip, setTrip] = useState(null);
   const [checklist, setChecklist] = useState([]);
   const [message, setMessage] = useState('');
@@ -33,7 +34,9 @@ const TripDetails = () => {
     }
   };
 
-  if (!trip) return <p className="text-center mt-10">Loading trip details...</p>;
+  if (!trip && !message) return <p className="text-center mt-10">Loading trip details...</p>;
+  if (message) return <p className="text-center mt-10 text-red-500">{message}</p>;
+
 
   return (
     <div className="max-w-xl mx-auto mt-10 p-4 border rounded space-y-6 shadow">

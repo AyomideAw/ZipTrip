@@ -1,269 +1,254 @@
-// import React, { useState } from 'react';
+// import { useEffect, useRef, useState } from 'react';
 // import { useAuthState } from 'react-firebase-hooks/auth';
 // import { auth } from '../firebase';
 // import { addTrip } from '../api/firestore';
 
-// const CreateTrip = () => {
-//   const [user] = useAuthState(auth);
+// export default function CreateTrip() {
+//   const [user, loading, error] = useAuthState(auth);
 //   const [form, setForm] = useState({
 //     destination: '',
+//     purpose: 'Leisure',
 //     startDate: '',
 //     endDate: '',
-//     purpose: 'Leisure',
 //   });
 //   const [message, setMessage] = useState('');
-//   const [checklist, setChecklist] = useState('');
+//   const inputRef = useRef(null);
+//   const [checklist, setChecklist] = useState([]);
+//   const [tripId, setTripId] = useState(null);
 
 //   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
+//     const { name, value } = e.target;
+//     setForm((prevForm) => ({ ...prevForm, [name]: value }));
 //   };
+
+//   useEffect(() => {
+//     if (!window.google || !window.google.maps) return;
+
+//     const autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
+//       types: ['(cities)'],
+//     });
+
+//     autocomplete.addListener('place_changed', () => {
+//       const place = autocomplete.getPlace();
+//       const destination = place.formatted_address || place.name;
+//       setForm((prevForm) => ({ ...prevForm, destination }));
+//     });
+//   }, []);
 
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
-
 //     const { destination, startDate, endDate, purpose } = form;
 
-//     if (!user) {
-//       setMessage('❌ Please log in to create a trip.');
-//       return;
-//     }
-
 //     if (!destination || !startDate || !endDate) {
-//       setMessage('❌ Please fill in all required fields.');
+//       setMessage('❌ Please fill all fields.');
 //       return;
 //     }
 
 //     try {
 //       const dateRange = `${startDate} to ${endDate}`;
 //       const id = await addTrip({ destination, purpose, dateRange });
-//       setMessage(`✅ Trip saved with ID: ${id}`);
+//       setTripId(id);
+//       //setMessage(`✅ Trip saved with ID: ${id}`);
+//       setMessage(`✅ Trip saved with ID`);
 //     } catch (err) {
 //       console.error(err);
 //       setMessage('❌ Failed to save trip.');
 //     }
 //   };
 
-//   const handleGeminiTest = async () => {
+//   const handleGeminiChecklist = async () => {
+//     if (!tripId) {
+//       setMessage('❌ Please save the trip first before generating the checklist.');
+//       return;
+//     }
+  
+//     const { destination, startDate, endDate, purpose } = form;
+//     const dateRange = `${startDate} to ${endDate}`;
+  
 //     try {
-//       const { destination, startDate, endDate, purpose } = form;
-//       const dateRange = `${startDate} to ${endDate}`;
-
 //       const response = await fetch('http://localhost:8989/api/gemini', {
 //         method: 'POST',
 //         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({
-//           destination,
-//           dateRange,
-//           purpose,
-//           weather: 'Mild', // You can later make this dynamic
-//         }),
+//         body: JSON.stringify({ destination, dateRange, purpose, weather: 'Mild' }),
 //       });
-
+  
 //       const data = await response.json();
+  
 //       if (data.checklist) {
-//         setChecklist(data.checklist);
+//         const parsed = [];
+//           let currentSection = null;
+
+//           for (const line of lines) {
+//             const trimmed = line.trim();
+
+//             if (!trimmed) continue;
+
+//             // Header: trip description or category
+//             if (
+//               trimmed.toLowerCase().includes('packing list') ||
+//               trimmed.endsWith(':') ||
+//               trimmed.endsWith(':**') ||
+//               trimmed.includes('**')
+//             ) {
+//               currentSection = {
+//                 title: trimmed.replace(/\*+|:$/g, '').trim(),
+//                 items: [],
+//               };
+//               parsed.push(currentSection);
+//             } else if (currentSection) {
+//               currentSection.items.push({
+//                 label: trimmed.replace(/^[-*•\d.]+/, '').trim(),
+//                 checked: false,
+//               });
+//             }
+//           }
+//         setChecklist(parsed);
 //         setMessage('✅ Checklist generated!');
 //       } else {
 //         setMessage('❌ No checklist returned.');
 //       }
 //     } catch (err) {
 //       console.error('Gemini error:', err);
-//       setMessage('❌ Failed to fetch checklist from Gemini.');
+//       setMessage('❌ Failed to fetch checklist.');
 //     }
 //   };
 
-//   if (!user) return <p className="text-center mt-10">Please log in to create a trip.</p>;
+//   if (!user) return <p className="text-center mt-10 text-red-500">Please log in to create a trip.</p>;
 
 //   return (
-//     <div className="max-w-md mx-auto mt-10 p-4 border rounded space-y-4 shadow">
-//       <h2 className="text-2xl font-bold">Create a New Trip</h2>
-
-//       <form onSubmit={handleSubmit} className="space-y-4">
-//         <input
-//           type="text"
-//           name="destination"
-//           placeholder="Destination"
-//           value={form.destination}
-//           onChange={handleChange}
-//           className="w-full p-2 border rounded"
-//         />
-
-//         <div className="flex gap-2">
+//     <div className="min-h-screen bg-amber-50 flex items-center justify-center px-4 py-10">
+//       <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-lg space-y-6">
+//         <h2 className="text-4xl font-bold text-center text-[#007FFF]">Plan Your Trip ✈️</h2>
+//         <h2 className="text-2xl text-center text-black">Where The Function @!!!</h2>
+  
+//         <form onSubmit={handleSubmit} className="space-y-4">
 //           <input
-//             type="date"
-//             name="startDate"
-//             value={form.startDate}
+//             ref={inputRef}
+//             type="text"
+//             name="destination"
+//             placeholder="Destination"
+//             value={form.destination}
 //             onChange={handleChange}
-//             className="w-full p-2 border rounded"
+//             className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#007FFF]"
 //           />
-//           <input
-//             type="date"
-//             name="endDate"
-//             value={form.endDate}
+  
+//           <div className="flex gap-4">
+//             <input
+//               type="date"
+//               name="startDate"
+//               value={form.startDate}
+//               onChange={handleChange}
+//               className="w-1/2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+//             />
+//             <input
+//               type="date"
+//               name="endDate"
+//               value={form.endDate}
+//               onChange={handleChange}
+//               className="w-1/2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+//             />
+//           </div>
+  
+//           <select
+//             name="purpose"
+//             value={form.purpose}
 //             onChange={handleChange}
-//             className="w-full p-2 border rounded"
-//           />
-//         </div>
-
-//         <select
-//           name="purpose"
-//           value={form.purpose}
-//           onChange={handleChange}
-//           className="w-full p-2 border rounded"
-//         >
-//           <option value="Leisure">Leisure</option>
-//           <option value="Business">Business</option>
-//           <option value="Adventure">Adventure</option>
-//           <option value="Family">Family</option>
-//         </select>
-
+//             className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+//           >
+//             <option value="Leisure">Leisure</option>
+//             <option value="Business">Business</option>
+//             <option value="Adventure">Adventure</option>
+//             <option value="Family">Family</option>
+//           </select>
+  
+//           <button
+//             type="submit"
+//             className="w-full bg-[#CC5500] text-white p-3 rounded-md font-medium hover:bg-orange-700 transition"
+//           >
+//             Save Trip
+//           </button>
+//         </form>
+  
 //         <button
-//           type="submit"
-//           className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+//           type="button"
+//           onClick={handleGeminiChecklist}
+//           className={`w-full p-3 rounded-md font-medium transition ${
+//             tripId ? 'bg-[#007FFF] text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+//           }`}
+//           disabled={!tripId}
 //         >
-//           Save Trip
+//           Generate Checklist
 //         </button>
-//       </form>
-
-//       <button
-//         type="button"
-//         onClick={handleGeminiTest}
-//         className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
-//       >
-//         Generate Gemini Checklist
-//       </button>
-
-//       {message && <p className="text-sm mt-2 text-center">{message}</p>}
-
-//       {checklist && (
-//         <div className="mt-4 p-4 bg-gray-100 border rounded">
-//           <h3 className="font-semibold mb-2">Suggested Checklist:</h3>
-//           <pre className="whitespace-pre-wrap text-sm">{checklist}</pre>
+  
+//         {message && <p className="text-center text-sm text-gray-700">{message}</p>}
+  
+//         {/* {checklist.length > 0 && (
+//           <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
+//             <h3 className="font-semibold mb-2 text-[#007FFF]">Checklist</h3>
+//             <ul className="list-disc list-inside space-y-1">
+//               {checklist.map((item, i) => (
+//                 <li key={i}>
+//                   <label className="flex items-center gap-2">
+//                     <input
+//                       type="checkbox"
+//                       checked={item.checked}
+//                       onChange={() => {
+//                         const updated = [...checklist];
+//                         updated[i].checked = !updated[i].checked;
+//                         setChecklist(updated);
+//                       }}
+//                     />
+//                     {item.label}
+//                   </label>
+//                 </li>
+//               ))}
+//             </ul>
+//           </div>
+//         )} */}
+//         {checklist.length > 0 && (
+//   <div className="p-6 bg-gray-50 border border-gray-200 rounded-md mt-6">
+//     <h3 className="font-semibold mb-4 text-[#007FFF] text-xl">Checklist</h3>
+//     <div className="space-y-6">
+//       {checklist.map((section, idx) => (
+//         <div key={idx}>
+//           <h4 className="text-lg font-bold text-gray-800 mb-2">{section.title}</h4>
+//           <ul className="space-y-3">
+//             {section.items.map((item, i) => (
+//               <li key={i}>
+//                 <label className="flex items-center gap-3 text-gray-800">
+//                   <input
+//                     type="checkbox"
+//                     checked={item.checked}
+//                     onChange={() => {
+//                       const updated = [...checklist];
+//                       updated[idx].items[i].checked = !updated[idx].items[i].checked;
+//                       setChecklist(updated);
+//                     }}
+//                     className="h-5 w-5 accent-[#007FFF]"
+//                   />
+//                   <span className="text-base">{item.label}</span>
+//                 </label>
+//               </li>
+//             ))}
+//           </ul>
 //         </div>
-//       )}
+//       ))}
 //     </div>
-//   );
-// };
-
-// export default CreateTrip;
-
-
-
-// import React, { useState } from 'react';
-// import { useAuth } from '../context/AuthContext';
-// //import { auth } from '../firebase';
-// import { addTrip } from '../api/firestore';
-
-// const CreateTrip = () => {
-//   const { user } = useAuth();
-//   const [form, setForm] = useState({
-//     destination: '',
-//     startDate: '',
-//     endDate: '',
-//     purpose: 'Leisure',
-//   });
-//   const [message, setMessage] = useState('');
-
-//   const handleChange = (e) => {
-//     setForm({ ...form, [e.target.name]: e.target.value });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     const { destination, startDate, endDate, purpose } = form;
-
-//     if (!user) {
-//       setMessage('❌ Please log in to create a trip.');
-//       return;
-//     }
-
-//     if (!destination || !startDate || !endDate) {
-//       setMessage('❌ Please fill in all required fields.');
-//       return;
-//     }
-
-//     try {
-//       const dateRange = `${startDate} to ${endDate}`;
-//       const id = await addTrip({
-//         destination,
-//         purpose,
-//         dateRange
-//       });
-//       setMessage(`✅ Trip saved with ID: ${id}`);
-//     } catch (err) {
-//       console.error(err);
-//       setMessage('❌ Failed to save trip.');
-//     }
-//   };
-
-//   if (!user) return <p className="text-center mt-10">Please log in to create a trip.</p>;
-
-//   return (
-//     <div className="max-w-md mx-auto mt-10 p-4 border rounded space-y-4 shadow">
-//       <h2 className="text-2xl font-bold">Create a New Trip</h2>
-
-//       <form onSubmit={handleSubmit} className="space-y-4">
-//         <input
-//           type="text"
-//           name="destination"
-//           placeholder="Destination"
-//           value={form.destination}
-//           onChange={handleChange}
-//           className="w-full p-2 border rounded"
-//         />
-
-//         <div className="flex gap-2">
-//           <input
-//             type="date"
-//             name="startDate"
-//             value={form.startDate}
-//             onChange={handleChange}
-//             className="w-full p-2 border rounded"
-//           />
-//           <input
-//             type="date"
-//             name="endDate"
-//             value={form.endDate}
-//             onChange={handleChange}
-//             className="w-full p-2 border rounded"
-//           />
-//         </div>
-
-//         <select
-//           name="purpose"
-//           value={form.purpose}
-//           onChange={handleChange}
-//           className="w-full p-2 border rounded"
-//         >
-//           <option value="Leisure">Leisure</option>
-//           <option value="Business">Business</option>
-//           <option value="Adventure">Adventure</option>
-//           <option value="Family">Family</option>
-//         </select>
-
-//         <button
-//           type="submit"
-//           className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
-//         >
-//           Save Trip
-//         </button>
-//       </form>
-
-//       {message && <p className="text-sm mt-2">{message}</p>}
+//   </div>
+// )}
+//       </div>
 //     </div>
-//   );
-// };
+//   );  
+// }
 
-// export default CreateTrip;
 
 import { useEffect, useRef, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebase'; // Adjust the path to your Firebase configuration
+import { auth } from '../firebase';
 import { addTrip } from '../api/firestore';
 
 export default function CreateTrip() {
-  const [user, loading, error] = useAuthState(auth);
+  const [user] = useAuthState(auth);
   const [form, setForm] = useState({
     destination: '',
     purpose: 'Leisure',
@@ -274,6 +259,7 @@ export default function CreateTrip() {
   const inputRef = useRef(null);
   const [checklist, setChecklist] = useState([]);
   const [tripId, setTripId] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({});
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -299,21 +285,36 @@ export default function CreateTrip() {
     const { destination, startDate, endDate, purpose } = form;
 
     if (!destination || !startDate || !endDate) {
-      setMessage('Please fill all fields.');
+      setMessage('❌ Please fill all fields.');
       return;
     }
 
     try {
       const dateRange = `${startDate} to ${endDate}`;
       const id = await addTrip({ destination, purpose, dateRange });
-      setMessage(`✅ Trip saved with ID: ${id}`);
+      setTripId(id);
+      setMessage(`✅ Trip saved.`);
     } catch (err) {
       console.error(err);
       setMessage('❌ Failed to save trip.');
     }
   };
 
+  const getIcon = (title) => {
+    const key = title.toLowerCase();
+    if (key.includes('clothing')) return '👕';
+    if (key.includes('essential')) return '💳';
+    if (key.includes('toiletries')) return '🧼';
+    if (key.includes('tech')) return '📱';
+    return '🧳';
+  };
+
   const handleGeminiChecklist = async () => {
+    if (!tripId) {
+      setMessage('❌ Please save the trip first before generating the checklist.');
+      return;
+    }
+
     const { destination, startDate, endDate, purpose } = form;
     const dateRange = `${startDate} to ${endDate}`;
 
@@ -328,15 +329,38 @@ export default function CreateTrip() {
 
       if (data.checklist) {
         const lines = data.checklist.split('\n').filter(line => line.trim() !== '');
-        const parsed = lines.map(item => ({
-          label: item.replace(/^[-*•\d.]+/, '').trim(),
-          checked: false,
-        }));
-        setChecklist(parsed);
-        setMessage('✅ Checklist generated!');
+        const parsed = [];
+        let currentSection = null;
 
-        // Update Firestore if trip already saved
-        if (tripId) await updateChecklist(tripId, parsed);
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+
+          if (
+            trimmed.toLowerCase().includes('packing list') ||
+            trimmed.endsWith(':') ||
+            trimmed.endsWith(':**') ||
+            trimmed.includes('**')
+          ) {
+            currentSection = {
+              title: trimmed.replace(/\*+|:$/g, '').trim(),
+              items: [],
+            };
+            parsed.push(currentSection);
+          } else if (currentSection) {
+            currentSection.items.push({
+              label: trimmed.replace(/^[-*•\d.]+/, '').trim(),
+              checked: false,
+            });
+          }
+        }
+
+        setChecklist(parsed);
+        setExpandedSections(parsed.reduce((acc, section, i) => {
+          acc[i] = true;
+          return acc;
+        }, {}));
+        setMessage('✅ Checklist generated!');
       } else {
         setMessage('❌ No checklist returned.');
       }
@@ -346,93 +370,127 @@ export default function CreateTrip() {
     }
   };
 
-  if (!user) return <p className="text-center mt-10">Please log in to create a trip.</p>;
+  const resetChecklist = () => {
+    setChecklist([]);
+    setExpandedSections({});
+    setMessage('');
+  };
+
+  if (!user) return <p className="text-center mt-10 text-red-500">Please log in to create a trip.</p>;
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-4 border rounded space-y-4 shadow">
-      <h2 className="text-xl font-bold">Create New Trip</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          ref={inputRef}
-          type="text"
-          name="destination"
-          placeholder="Destination"
-          value={form.destination}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        />
-        <div className="flex gap-2">
+    <div className="min-h-screen bg-amber-50 flex items-center justify-center px-4 py-10">
+      <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-lg space-y-6">
+        <h2 className="text-4xl font-bold text-center text-[#007FFF]">Plan Your Trip ✈️</h2>
+        <h2 className="text-2xl text-center text-black">Where The Function @!!!</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="date"
-            name="startDate"
-            value={form.startDate}
+            ref={inputRef}
+            type="text"
+            name="destination"
+            placeholder="Destination"
+            value={form.destination}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#007FFF]"
           />
-          <input
-            type="date"
-            name="endDate"
-            value={form.endDate}
+
+          <div className="flex gap-4">
+            <input
+              type="date"
+              name="startDate"
+              value={form.startDate}
+              onChange={handleChange}
+              className="w-1/2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+            />
+            <input
+              type="date"
+              name="endDate"
+              value={form.endDate}
+              onChange={handleChange}
+              className="w-1/2 p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+            />
+          </div>
+
+          <select
+            name="purpose"
+            value={form.purpose}
             onChange={handleChange}
-            className="w-full p-2 border rounded"
-          />
-        </div>
-        <select
-          name="purpose"
-          value={form.purpose}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-        >
-          <option value="Leisure">Leisure</option>
-          <option value="Business">Business</option>
-          <option value="Adventure">Adventure</option>
-          <option value="Family">Family</option>
-        </select>
+            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-[#007FFF]"
+          >
+            <option value="Leisure">Leisure</option>
+            <option value="Business">Business</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Family">Family</option>
+          </select>
+
+          <button
+            type="submit"
+            className="w-full bg-[#CC5500] text-white p-3 rounded-md font-medium hover:bg-orange-700 transition"
+          >
+            Save Trip
+          </button>
+        </form>
+
         <button
-          type="submit"
-          className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+          type="button"
+          onClick={handleGeminiChecklist}
+          className={`w-full p-3 rounded-md font-medium transition ${
+            tripId ? 'bg-[#007FFF] text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+          disabled={!tripId}
         >
-          Save Trip
+          Generate Checklist
         </button>
-      </form>
 
-      <button
-        type="button"
-        onClick={handleGeminiChecklist}
-        className="w-full bg-purple-600 text-white p-2 rounded hover:bg-purple-700"
-      >
-        Generate Checklist
-      </button>
+        <p onClick={resetChecklist} className="text-sm text-blue-600 hover:underline text-center cursor-pointer">
+          Reset Checklist
+        </p>
 
-      {message && <p className="text-sm mt-2 text-center">{message}</p>}
+        {message && <p className="text-center text-sm text-gray-700">{message}</p>}
 
-      {checklist.length > 0 && (
-        <div className="mt-4 p-4 bg-gray-100 border rounded">
-          <h3 className="font-semibold mb-2">Checklist</h3>
-          <ul className="list-disc list-inside">
-            {checklist.map((item, i) => (
-              <li key={i}>
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={item.checked}
-                    onChange={() => {
-                      const updated = [...checklist];
-                      updated[i].checked = !updated[i].checked;
-                      setChecklist(updated);
-                    }}
-                  />
-                  {item.label}
-                </label>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {checklist.length > 0 && (
+          <div className="p-6 bg-gray-50 border border-gray-200 rounded-md mt-6">
+            <h3 className="font-semibold mb-4 text-[#007FFF] text-xl">Checklist</h3>
+            <div className="space-y-6">
+              {checklist.map((section, idx) => (
+                <div key={idx}>
+                  <div
+                    onClick={() => setExpandedSections(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                    className="cursor-pointer mb-2 flex justify-between items-center"
+                  >
+                    <h4 className="text-lg font-bold text-gray-800">
+                      {getIcon(section.title)} {section.title}
+                    </h4>
+                    <span className="text-sm text-[#007FFF]">{expandedSections[idx] ? '−' : '+'}</span>
+                  </div>
+                  {expandedSections[idx] && (
+                    <ul className="space-y-3 pl-2">
+                      {section.items.map((item, i) => (
+                        <li key={i}>
+                          <label className="flex items-center gap-3 text-gray-800">
+                            <input
+                              type="checkbox"
+                              checked={item.checked}
+                              onChange={() => {
+                                const updated = [...checklist];
+                                updated[idx].items[i].checked = !updated[idx].items[i].checked;
+                                setChecklist(updated);
+                              }}
+                              className="h-5 w-5 accent-[#007FFF]"
+                            />
+                            <span className="text-base">{item.label}</span>
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-
-
-

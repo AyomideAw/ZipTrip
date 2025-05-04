@@ -1,23 +1,70 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// src/App.jsx
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CreateTrip from './pages/CreateTrip';
 import Dashboard from './pages/Dashboard';
-import TripDetails from './pages/TripDetails'; // ✅ Make sure this is here
-import AuthButton from './components/AuthButton';
-import Navbar from './components/Navbar'; // <-- ADD THIS LINE
+import TripDetails from './pages/TripDetails';
+import Login from './pages/Login';
+import Navbar from './components/Navbar'; // ✅ AuthButton is inside this now
+import PrivateRoute from './components/PrivateRoute';
+import { AuthProvider } from './context/AuthContext';
 
 const App = () => (
-  <Router>
-    <div className="p-4">
-      <h1 className="text-2xl font-bold">ZipTrip</h1>
-      <AuthButton />
-      <Navbar /> {/* <-- INSERT NAVBAR HERE */}
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/create" element={<CreateTrip />} />
-        <Route path="/trip/:tripId" element={<TripDetails />} /> {/* ✅ This is important */}
-      </Routes>
-    </div>
-  </Router>
+  <AuthProvider>
+    <Router>
+      <div className="p-4">
+        <Routes>
+          {/* Public Route */}
+          <Route path="/login" element={<Login />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <>
+                  <Navbar />
+                  <Navigate to="/create" replace />
+                </>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/create"
+            element={
+              <PrivateRoute>
+                <>
+                  <Navbar />
+                  <CreateTrip />
+                </>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <PrivateRoute>
+                <>
+                  <Navbar />
+                  <Dashboard />
+                </>
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/trip/:tripId"
+            element={
+              <PrivateRoute>
+                <>
+                  <Navbar />
+                  <TripDetails />
+                </>
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
+  </AuthProvider>
 );
 
 export default App;

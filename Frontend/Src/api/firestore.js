@@ -38,9 +38,8 @@ export const updateChecklist = async (tripId, checklist) => {
 };
 
 export const getTripById = async (tripId) => {
-  const tripRef = doc(db, 'trips', tripId);
-  const tripSnap = await getDoc(tripRef);
-  if (!tripSnap.exists()) throw new Error('Trip not found');
-  return { id: tripSnap.id, ...tripSnap.data() };
+  const ref = doc(db, 'trips', tripId);
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 };
 
