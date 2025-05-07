@@ -14,3 +14,6 @@ app.use('/api/gemini', geminiRoute);
 
 const PORT = process.env.PORT || 8989;
 app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+
+const geminiActivities = require('./routes/geminiactivities');
+app.use('/api/gemini-activities', geminiActivities);

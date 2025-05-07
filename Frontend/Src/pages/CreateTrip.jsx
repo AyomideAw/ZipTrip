@@ -247,6 +247,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
 import { addTrip } from '../api/firestore';
 
+
 export default function CreateTrip() {
   const [user] = useAuthState(auth);
   const [form, setForm] = useState({
@@ -260,6 +261,8 @@ export default function CreateTrip() {
   const [checklist, setChecklist] = useState([]);
   const [tripId, setTripId] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
+  const [activities, setActivities] = useState([]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -275,8 +278,15 @@ export default function CreateTrip() {
 
     autocomplete.addListener('place_changed', () => {
       const place = autocomplete.getPlace();
-      const destination = place.formatted_address || place.name;
-      setForm((prevForm) => ({ ...prevForm, destination }));
+let destination = place.name;
+
+if (place.formatted_address) {
+  const parts = place.formatted_address.split(',');
+  destination = parts[0].replace(/^\d{4,6}\s*/, '').trim(); // remove leading postal code
+}
+
+setForm((prevForm) => ({ ...prevForm, destination }));
+
     });
   }, []);
 
@@ -314,6 +324,7 @@ export default function CreateTrip() {
       setMessage('❌ Please save the trip first before generating the checklist.');
       return;
     }
+    
 
     const { destination, startDate, endDate, purpose } = form;
     const dateRange = `${startDate} to ${endDate}`;
@@ -326,6 +337,14 @@ export default function CreateTrip() {
       });
 
       const data = await response.json();
+
+      if (data.activities) {
+        const suggestions = data.activities
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+        setActivities(suggestions);
+      }
 
       if (data.checklist) {
         const lines = data.checklist.split('\n').filter(line => line.trim() !== '');
@@ -370,17 +389,66 @@ export default function CreateTrip() {
     }
   };
 
+  const handleGeminiActivities = async () => {
+    if (!form.destination) {
+      setMessage('❌ Destination is required for suggestions.');
+      return;
+    }
+  
+    try {
+      const response = await fetch('http://localhost:8989/api/gemini-activities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ destination: form.destination }),
+      });
+  
+      const data = await response.json();
+      if (data.suggestions) {
+        const suggestions = data.suggestions
+          .split('\n')
+          .map(line =>
+            line
+              .replace(/^[-*•\d.]+/, '')         // remove bullets or numbers
+              .replace(/\*\*/g, '')              // remove all **
+              .trim()
+          )
+          
+          .filter(Boolean);
+  
+        setActivities(suggestions);
+        setMessage('✅ Activity suggestions generated!');
+      } else {
+        setMessage('❌ No suggestions returned.');
+      }
+    } catch (err) {
+      console.error('Gemini activities error:', err);
+      setMessage('❌ Failed to fetch activity suggestions.');
+    }
+  };
+  
+
+  const canSuggestActivities = () => {
+    return form.destination && form.startDate && form.endDate && tripId;
+  };
+  
+  
   const resetChecklist = () => {
     setChecklist([]);
     setExpandedSections({});
     setMessage('');
   };
 
+  const resetActivities = () => {
+    setActivities([]);
+    setMessage('');
+  };
+  
+
   if (!user) return <p className="text-center mt-10 text-red-500">Please log in to create a trip.</p>;
 
   return (
     <div className="min-h-screen bg-amber-50 flex items-center justify-center px-4 py-10">
-      <div className="max-w-xl w-full p-6 bg-white rounded-lg shadow-lg space-y-6">
+      <div className="max-w-4xl w-full p-6 bg-white rounded-lg shadow-lg space-y-6">
         <h2 className="text-4xl font-bold text-center text-[#007FFF]">Plan Your Trip ✈️</h2>
         <h2 className="text-2xl text-center text-black">Where The Function @!!!</h2>
 
@@ -443,14 +511,36 @@ export default function CreateTrip() {
           Generate Checklist
         </button>
 
+        <button
+  type="button"
+  onClick={handleGeminiActivities}
+  className={`w-full p-3 rounded-md font-medium transition ${
+    canSuggestActivities()
+      ? 'bg-green-600 text-white hover:bg-green-700'
+      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+  }`}
+  disabled={!canSuggestActivities()}
+>
+  Suggest Activities 🌍
+</button>
+
+
+
         <p onClick={resetChecklist} className="text-sm text-blue-600 hover:underline text-center cursor-pointer">
           Reset Checklist
         </p>
 
+        <p onClick={resetActivities} className="text-sm text-blue-600 hover:underline text-center cursor-pointer">
+          Reset Activities
+        </p>
+
+
         {message && <p className="text-center text-sm text-gray-700">{message}</p>}
 
+        {(checklist.length > 0 || activities.length > 0) && (
+        <div className="flex flex-col md:flex-row gap-6 mt-6">
         {checklist.length > 0 && (
-          <div className="p-6 bg-gray-50 border border-gray-200 rounded-md mt-6">
+          <div className="w-full md:w-1/2 p-6 bg-gray-50 border border-gray-200 rounded-md mt-6">
             <h3 className="font-semibold mb-4 text-[#007FFF] text-xl">Checklist</h3>
             <div className="space-y-6">
               {checklist.map((section, idx) => (
@@ -490,7 +580,32 @@ export default function CreateTrip() {
             </div>
           </div>
         )}
+        {activities.length > 0 && (
+  <div className="w-full md:w-1/2 p-6 bg-gray-100 border border-gray-300 rounded-md mt-6">
+    <h3 className="font-semibold mb-4 text-green-700 text-xl">Activity Suggestions</h3>
+    <div className="space-y-4">
+  <h4 className="text-2xl font-bold text-green-800 mb-2">{form.destination}</h4>
+  <ul className="pl-6 space-y-2 text-gray-800">
+  {activities.map((activity, idx) => (
+    <li key={idx} className="before:content-['•'] before:mr-2 before:text-lg">{activity}</li>
+  ))}
+</ul>
+
+</div>
+
+  </div>
+)}
+</div>
+)}
+
       </div>
     </div>
   );
 }
+
+
+
+
+
+
+
