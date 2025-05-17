@@ -246,6 +246,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase';
 import { addTrip } from '../api/firestore';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 
 export default function CreateTrip() {
@@ -330,11 +331,11 @@ setForm((prevForm) => ({ ...prevForm, destination }));
     const dateRange = `${startDate} to ${endDate}`;
 
     try {
-      const response = await fetch('http://localhost:8989/api/gemini', {
+      const response = await fetch(`${BACKEND_URL}/api/gemini`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ destination, dateRange, purpose, weather: 'Mild' }),
-      });
+      });           
 
       const data = await response.json();
 
@@ -396,11 +397,11 @@ setForm((prevForm) => ({ ...prevForm, destination }));
     }
   
     try {
-      const response = await fetch('http://localhost:8989/api/gemini-activities', {
+      const response = await fetch(`${BACKEND_URL}/api/gemini-activities`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ destination: form.destination }),
-      });
+      });      
   
       const data = await response.json();
       if (data.suggestions) {
