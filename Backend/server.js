@@ -7,7 +7,10 @@ const geminiRoute = require('./routes/geminiservice');
 const app = express();
 
 // ✅ Allow frontend (adjust origin if deployed)
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({
+    origin: ['http://localhost:5173', 'https://zip-trip-main.vercel.app'],
+    credentials: true,
+  }));
 
 app.use(express.json());
 app.use('/api/gemini', geminiRoute);
